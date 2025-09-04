@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accountapi
+  namespace: tasktracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accountapi
+  template:
+    metadata:
+      labels:
+        app: accountapi
+    spec:
+      containers:
+        - name: accountapi
+          image: hut0r9n/accountapi:latest
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-connection
+                  key: DATABASE_URL
+                  optional: true
+            - name: TEST_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: service-config
+                  key: TEST_MODE
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accountapi-svc
+  namespace: tasktracker
+spec:
+  selector:
+    app: accountapi
+  type: NodePort
+  ports:
+  - port: 8000
+    targetPort: 8000
+    nodePort: 30004
